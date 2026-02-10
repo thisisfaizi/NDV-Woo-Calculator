@@ -1,0 +1,149 @@
+/**
+ * NDV Woo Calculator — Admin Styles
+ *
+ * @package NDV_Woo_Calculator
+ * @since   1.0.0
+ */
+
+/* Admin page wrapper */
+.ndvwc-admin-wrap {
+	max-width: 960px;
+}
+
+/* Tabs */
+.ndvwc-tabs {
+	margin-bottom: 20px;
+}
+
+/* Mapping rows */
+.ndvwc-mapping-row {
+	background: #fff;
+	border: 1px solid #ccd0d4;
+	border-radius: 4px;
+	margin-bottom: 16px;
+	padding: 0;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.ndvwc-mapping-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	padding: 12px 16px;
+	background: #f0f0f1;
+	border-bottom: 1px solid #ccd0d4;
+	border-radius: 4px 4px 0 0;
+}
+
+.ndvwc-mapping-header h3 {
+	margin: 0;
+	font-size: 14px;
+	font-weight: 600;
+}
+
+.ndvwc-mapping-fields {
+	margin: 0;
+}
+
+.ndvwc-mapping-fields th {
+	padding-left: 16px;
+	width: 200px;
+}
+
+.ndvwc-mapping-fields td {
+	padding-right: 16px;
+}
+
+/* Remove mapping button */
+.ndvwc-remove-mapping {
+	color: #b32d2e;
+	border-color: #b32d2e;
+}
+
+.ndvwc-remove-mapping:hover {
+	background: #b32d2e;
+	color: #fff;
+	border-color: #b32d2e;
+}
+
+.ndvwc-remove-mapping .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	line-height: 1;
+}
+
+/* Field mappings sub-table */
+.ndvwc-field-mappings-container {
+	margin-top: 4px;
+}
+
+.ndvwc-field-mappings-table {
+	margin-bottom: 8px;
+}
+
+.ndvwc-field-mappings-table thead th {
+	padding: 8px 10px;
+	font-weight: 600;
+}
+
+.ndvwc-field-mappings-table tbody td {
+	padding: 6px 10px;
+	vertical-align: middle;
+}
+
+.ndvwc-field-mappings-table input[type="text"] {
+	width: 100%;
+}
+
+/* Remove field mapping button */
+.ndvwc-remove-field-mapping {
+	padding: 2px 6px;
+	min-height: 28px;
+}
+
+.ndvwc-remove-field-mapping .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	color: #b32d2e;
+}
+
+/* Add buttons */
+.ndvwc-add-field-mapping {
+	margin-top: 4px;
+}
+
+.ndvwc-add-field-mapping .dashicons,
+#ndvwc-add-mapping .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	vertical-align: text-bottom;
+	margin-right: 4px;
+}
+
+/* Mapping actions bar */
+.ndvwc-mapping-actions {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 16px;
+	padding-top: 16px;
+	border-top: 1px solid #ccd0d4;
+}
+
+/* Save status message */
+.ndvwc-save-status {
+	font-style: italic;
+	color: #00a32a;
+}
+
+.ndvwc-save-status.error {
+	color: #d63638;
+}
+
+/* Settings form tweaks */
+.ndvwc-settings-form .form-table th {
+	width: 200px;
+}

@@ -1,0 +1,114 @@
+/**
+ * NDV Woo Calculator — Frontend Styles
+ *
+ * @package NDV_Woo_Calculator
+ * @since   1.0.0
+ */
+
+/* Add to cart wrapper */
+.ndvwc-add-to-cart-wrapper {
+    margin: 16px 0;
+    text-align: left;
+}
+
+/* Main button */
+.ndvwc-add-to-cart-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 28px;
+    font-size: 16px;
+    font-weight: 600;
+    line-height: 1.4;
+    color: #fff;
+    background-color: #2563eb;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+    box-shadow: 0 2px 6px rgba(37, 99, 235, 0.3);
+}
+
+.ndvwc-add-to-cart-btn:hover {
+    background-color: #1d4ed8;
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+    transform: translateY(-1px);
+}
+
+.ndvwc-add-to-cart-btn:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(37, 99, 235, 0.3);
+}
+
+.ndvwc-add-to-cart-btn:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+/* Price portion */
+.ndvwc-btn-price {
+    font-weight: 700;
+}
+
+/* Loading state */
+.ndvwc-add-to-cart-btn.ndvwc-loading {
+    position: relative;
+    pointer-events: none;
+    opacity: 0.75;
+}
+
+.ndvwc-add-to-cart-btn.ndvwc-loading::after {
+    content: '';
+    display: inline-block;
+    width: 16px;
+    height: 16px;
+    margin-left: 8px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: #fff;
+    border-radius: 50%;
+    animation: ndvwc-spin 0.6s linear infinite;
+}
+
+@keyframes ndvwc-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* Success feedback */
+.ndvwc-add-to-cart-btn.ndvwc-feedback-success {
+    background-color: #16a34a;
+    box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
+}
+
+/* Error feedback */
+.ndvwc-add-to-cart-btn.ndvwc-feedback-error {
+    background-color: #dc2626;
+    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
+}
+
+/* Feedback area */
+.ndvwc-btn-feedback {
+    margin-top: 10px;
+    font-size: 14px;
+}
+
+/* View cart link */
+.ndvwc-view-cart-link {
+    display: inline-block;
+    padding: 6px 16px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #2563eb;
+    text-decoration: none;
+    border: 1px solid #2563eb;
+    border-radius: 4px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.ndvwc-view-cart-link:hover {
+    background-color: #2563eb;
+    color: #fff;
+}

@@ -1,0 +1,21 @@
+# Dependencies
+node_modules/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Agent/AI
+.agent/
+.gemini/
+
+# WordPress dev skills clone
+wordpress-dev-skills/
+
+# Build artifacts
+*.log
