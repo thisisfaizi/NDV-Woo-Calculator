@@ -127,6 +127,59 @@ class NDV_Woo_Calculator_Config_Manager
     }
 
     /**
+     * Get all global rates (metals, stones, chains).
+     *
+     * @since  1.1.0
+     * @return array { metals: array, stones: array, chains: array }
+     */
+    public static function get_global_rates()
+    {
+        $defaults = array(
+            'metals' => array(),
+            'stones' => array(),
+            'chains' => array(),
+        );
+        $rates = get_option('ndvwc_global_rates', $defaults);
+        return wp_parse_args($rates, $defaults);
+    }
+
+    /**
+     * Get metal rates.
+     *
+     * @since  1.1.0
+     * @return array
+     */
+    public static function get_metal_rates()
+    {
+        $rates = self::get_global_rates();
+        return $rates['metals'];
+    }
+
+    /**
+     * Get stone rates.
+     *
+     * @since  1.1.0
+     * @return array
+     */
+    public static function get_stone_rates()
+    {
+        $rates = self::get_global_rates();
+        return $rates['stones'];
+    }
+
+    /**
+     * Get chain rates.
+     *
+     * @since  1.1.0
+     * @return array
+     */
+    public static function get_chain_rates()
+    {
+        $rates = self::get_global_rates();
+        return $rates['chains'];
+    }
+
+    /**
      * Get WooCommerce products for the admin dropdown.
      *
      * Uses transient caching to avoid expensive queries on every page load.

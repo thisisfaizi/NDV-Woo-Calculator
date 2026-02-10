@@ -45,6 +45,16 @@ class NDV_Woo_Calculator_Activator
             add_option('ndvwc_form_mappings', array());
         }
 
+        // Initialize empty global rates if they don't exist.
+        if (false === get_option('ndvwc_global_rates')) {
+            $default_rates = array(
+                'metals' => array(),
+                'stones' => array(),
+                'chains' => array(),
+            );
+            add_option('ndvwc_global_rates', $default_rates);
+        }
+
         // Store db version.
         add_option('ndvwc_db_version', '1.0.0');
     }

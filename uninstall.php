@@ -14,6 +14,7 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 // Delete plugin options.
 delete_option('ndvwc_settings');
 delete_option('ndvwc_form_mappings');
+delete_option('ndvwc_global_rates');
 delete_option('ndvwc_db_version');
 
 // Clean up any transients.

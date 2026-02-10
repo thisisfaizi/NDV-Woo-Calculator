@@ -1,67 +1,74 @@
 === NDV Woo Calculator ===
 Contributors: nowdigiverse
-Tags: woocommerce, elementor, calculator, dynamic pricing, form
+Tags: woocommerce, elementor, calculator, dynamic pricing, form, pendant, jewelry
 Requires at least: 6.0
 Tested up to: 6.7
 Requires PHP: 8.0
-Stable tag: 1.0.0
+Stable tag: 1.2.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
-Integrate Elementor Pro Forms with WooCommerce for dynamic product pricing based on form inputs.
+Integrate Elementor Pro Forms with WooCommerce for dynamic product pricing, including a specialized Jewelry Pendant Configurator.
 
 == Description ==
 
-NDV Woo Calculator connects Elementor Pro Forms to WooCommerce, allowing you to calculate dynamic product prices based on user form inputs and add them to the cart with a single click.
+NDV Woo Calculator connects Elementor Pro Forms to WooCommerce, allowing you to calculate dynamic product prices based on user form inputs. 
 
-**Features:**
+**New in 1.2.0: User Weight Input!**
+You can now optionally allow customers to input the metal weight manually in the Pendant Configurator, with the backend falling back to your configured weight if they don't.
 
-* Dynamic price calculation from Elementor form fields
-* AJAX-powered add-to-cart with live price updates
-* Multiple form-to-product mapping configurations
-* All form selections saved as WooCommerce order metadata
-* Clean admin display of order details (label → value format)
-* Shortcode support: `[ndv_woo_add_to_cart form_id="123"]`
-* Conditional field handling and hidden field clearing
-* Fully configurable via admin panel — no code required
+**Core Features:**
 
-**Supported Field Types:**
-
-* Text, Select, Radio, Checkbox, Number, Hidden, Calculated
+*   **Pendant Configurator:** Create custom jewelry products with dynamic metal, stone, and chain pricing.
+*   **User Weight Input:** (New) Optional customer input for metal weight.
+*   **Global Material Rates:** Set centralized prices for gold, silver, diamonds, and chains.
+*   **Dynamic Elementor Forms:** Calculate any product price from form fields.
+*   **AJAX-powered:** Live price updates on the frontend.
+*   **WooCommerce Integration:** Adds all custom options as order metadata.
+*   **Shortcode Support:**
+    *   `[ndv_woo_add_to_cart form_id="123"]` for Elementor forms.
+    *   `[ndv_pendant_configurator product_id="123"]` for jewelry configurators.
 
 == Installation ==
 
-1. Upload the `ndv-woo-calculator` folder to `/wp-content/plugins/` or install through the WordPress plugins screen.
-2. Activate the plugin through the 'Plugins' screen in WordPress.
-3. Ensure WooCommerce and Elementor Pro are active.
-4. Navigate to **NDV Woo Calculator** in the admin menu.
-5. Configure Global Settings and create Form-to-Product Mappings.
-6. Add the shortcode `[ndv_woo_add_to_cart form_id="YOUR_FORM_ID"]` to the page with your Elementor form, or enable auto-inject.
+1.  Upload the `ndv-woo-calculator` folder to `/wp-content/plugins/` or install through the WordPress plugins screen.
+2.  Activate the plugin through the 'Plugins' screen in WordPress.
+3.  Ensure WooCommerce is active (Elementor Pro is required only for form-based pricing).
+4.  Navigate to **NDV Woo Calculator** in the admin menu.
+5.  **For Jewelry:** Go to the "Global Rates" tab to set metal/stone prices, then create a Mapping with "Pendant Configurator" mode.
+6.  **For Forms:** Create a Mapping with "Elementor Form" mode and use the form shortcode.
 
 == Frequently Asked Questions ==
 
 = Does this plugin require Elementor Pro? =
 
-Yes. The plugin is designed to work with Elementor Pro Forms for form input integration.
+Yes, for the standard form integration. The **Pendant Configurator** feature works independently without Elementor Pro.
 
-= Can I use multiple forms for different products? =
+= How does the Pendant Configurator calculate price? =
 
-Yes. The admin panel supports creating as many form-to-product mapping configurations as needed.
+It uses the formula: `(Metal Weight * Rate) + (Stone Cost * Qty) + (Chain Rate * Length) + Labor + Markup`. All rates are managed globally.
 
-= How does the price override work? =
+= Can I allow customers to enter their own weight? =
 
-The calculated price from your Elementor form replaces the base product price in the WooCommerce cart using the `woocommerce_before_calculate_totals` hook.
+Yes! As of version 1.2.0, you can enable "Allow User Weight Input" in the Pendant Configurator mapping settings.
 
-= Where can I see the form data after an order? =
+= Can I use different markups per product? =
 
-All mapped form fields are displayed in the WooCommerce order details (WP Admin → WooCommerce → Orders) with clean labels.
+Yes, each product mapping allows you to set a specific markup (fixed or percentage) and labor cost.
 
 == Changelog ==
 
-= 1.0.0 =
-* Initial release.
+= 1.2.0 =
+*   Added "Allow User Weight Input" setting for Pendant Configurator.
+*   Updated calculating engine to support user-defined weight.
+*   Updated frontend UI to show weight input when enabled.
 
-== Upgrade Notice ==
+= 1.1.0 =
+*   Added Pendant Configurator module.
+*   Added Global Rates management for Metals, Stones, and Chains.
+*   Added new shortcode `[ndv_pendant_configurator]`.
+*   Added support for multiple calculation modes in mappings.
+*   Improved admin UI with tabbed navigation.
 
 = 1.0.0 =
-Initial release.
+*   Initial release.

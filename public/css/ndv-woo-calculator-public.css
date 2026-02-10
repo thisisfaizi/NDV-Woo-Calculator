@@ -5,7 +5,9 @@
  * @since   1.0.0
  */
 
-/* Add to cart wrapper */
+/* ==========================================================================
+   Standard Add to Cart Wrapper
+   ========================================================================== */
 .ndvwc-add-to-cart-wrapper {
     margin: 16px 0;
     text-align: left;
@@ -78,37 +80,208 @@
 }
 
 /* Success feedback */
-.ndvwc-add-to-cart-btn.ndvwc-feedback-success {
+.ndvwc-add-to-cart-btn.success {
     background-color: #16a34a;
     box-shadow: 0 2px 6px rgba(22, 163, 74, 0.3);
 }
 
-/* Error feedback */
-.ndvwc-add-to-cart-btn.ndvwc-feedback-error {
-    background-color: #dc2626;
-    box-shadow: 0 2px 6px rgba(220, 38, 38, 0.3);
-}
-
 /* Feedback area */
-.ndvwc-btn-feedback {
+.ndvwc-btn-feedback,
+.ndvwc-pendant-feedback {
     margin-top: 10px;
     font-size: 14px;
 }
 
-/* View cart link */
-.ndvwc-view-cart-link {
-    display: inline-block;
-    padding: 6px 16px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #2563eb;
-    text-decoration: none;
-    border: 1px solid #2563eb;
-    border-radius: 4px;
-    transition: background-color 0.2s ease, color 0.2s ease;
+.ndvwc-feedback-error {
+    color: #dc2626;
 }
 
-.ndvwc-view-cart-link:hover {
-    background-color: #2563eb;
+.ndvwc-feedback-success {
+    color: #16a34a;
+}
+
+/* View cart link */
+.ndvwc-view-cart {
+    display: inline-block;
+    font-weight: 600;
+    text-decoration: underline;
+    color: inherit;
+}
+
+/* ==========================================================================
+   Pendant Configurator
+   ========================================================================== */
+.ndvwc-pendant-configurator {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 24px;
+    margin-bottom: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+    max-width: 500px;
+}
+
+.ndvwc-pendant-section {
+    margin-bottom: 20px;
+}
+
+.ndvwc-pendant-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 8px;
+}
+
+.ndvwc-pendant-label small {
+    color: #6b7280;
+    font-weight: 400;
+    margin-left: 4px;
+}
+
+.ndvwc-pendant-select {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #111827;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ndvwc-pendant-select:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Stone Rows */
+.ndvwc-pendant-stone-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.ndvwc-pendant-stone-select {
+    flex: 1;
+}
+
+.ndvwc-pendant-stone-qty {
+    width: 70px;
+    padding: 10px;
+    text-align: center;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+}
+
+.ndvwc-pendant-remove-stone {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    background: #fee2e2;
+    color: #ef4444;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 20px;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.ndvwc-pendant-remove-stone:hover {
+    background: #fecaca;
+    color: #dc2626;
+}
+
+.ndvwc-pendant-add-stone-btn {
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 13px;
+    color: #4b5563;
+    background: #f3f4f6;
+    border: 1px solid #e5e7eb;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.ndvwc-pendant-add-stone-btn:hover {
+    background: #e5e7eb;
+    color: #111827;
+}
+
+/* Price Display */
+.ndvwc-pendant-price-section {
+    background: #f9fafb;
+    border-radius: 6px;
+    padding: 16px;
+    border: 1px solid #f3f4f6;
+    margin-top: 24px;
+}
+
+.ndvwc-pendant-price-display {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+}
+
+.ndvwc-pendant-price-label {
+    font-weight: 500;
+    color: #374151;
+}
+
+.ndvwc-pendant-price-value {
+    font-weight: 700;
+    color: #111827;
+    transition: opacity 0.2s;
+}
+
+/* Add to Cart Button override for configurator */
+.ndvwc-pendant-add-to-cart-btn {
+    width: 100%;
+    justify-content: center;
+    margin-top: 8px;
+    padding: 14px;
+    font-size: 16px;
+    font-weight: 600;
     color: #fff;
+    background-color: #2563eb;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.ndvwc-pendant-add-to-cart-btn:hover {
+    background-color: #1d4ed8;
+}
+
+.ndvwc-pendant-add-to-cart-btn:disabled {
+    background-color: #9ca3af;
+    cursor: not-allowed;
+}
+
+.ndvwc-pendant-add-to-cart-btn.success {
+    background-color: #16a34a;
+}
+
+/* Pendant Text Input (Weight, etc.) */
+.ndvwc-pendant-input {
+    width: 100%;
+    padding: 10px 12px;
+    font-size: 15px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    background-color: #fff;
+    color: #111827;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.ndvwc-pendant-input:focus {
+    border-color: #2563eb;
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
 }

@@ -1,382 +1,547 @@
 /**
  * NDV Woo Calculator — Frontend JavaScript
  *
- * Monitors Elementor form fields, updates the add-to-cart button price label,
- * collects form data, and sends AJAX add-to-cart requests.
+ * Handles form detection, price monitoring, data collection, and AJAX add-to-cart.
+ * Supports three modes:
+ *   1. "elementor": reads price from a calculated field in an Elementor form.
+ *   2. "rules": lets the server calculate the price based on form data rules.
+ *   3. "pendant": separate pendant configurator widget (metals, stones, chains).
  *
  * @package NDV_Woo_Calculator
  * @since   1.0.0
  */
 
-/* global jQuery, ndvwcFrontend */
+/* global jQuery, ndvwcFrontend, ndvwcPendant */
 (function ($) {
     'use strict';
 
-    /**
-     * Debug logger.
-     */
-    function log() {
-        if (ndvwcFrontend.debug && window.console) {
-            console.log.apply(console, ['[NDVWC]'].concat(Array.prototype.slice.call(arguments)));
-        }
-    }
-
-    /**
-     * Initialize when DOM is ready.
-     */
     $(document).ready(function () {
-        if (!ndvwcFrontend.mappings || !ndvwcFrontend.mappings.length) {
-            log('No mappings configured.');
-            return;
+        // Initialize standard Elementor mappings.
+        if (ndvwcFrontend && ndvwcFrontend.mappings) {
+            ndvwcFrontend.mappings.forEach(function (mapping) {
+                initMapping(mapping);
+            });
         }
 
-        // Initialize each mapping.
-        ndvwcFrontend.mappings.forEach(function (mapping) {
-            initMapping(mapping);
+        // Initialize Pendant Configurators.
+        $('.ndvwc-pendant-configurator').each(function () {
+            initPendantConfigurator($(this));
         });
     });
 
+    // ========================================================================
+    // STANDARD FORM MAPPING LOGIC
+    // ========================================================================
+
     /**
-     * Initialize a single form-to-product mapping.
-     *
-     * @param {Object} mapping Mapping configuration.
+     * Initialize a single form mapping.
      */
     function initMapping(mapping) {
-        var formId = mapping.form_id;
-        var priceFieldId = mapping.price_field_id;
-
-        log('Initializing mapping for form:', formId);
-
-        // Find the button for this form (from shortcode).
-        var $btn = $('.ndvwc-add-to-cart-btn[data-form-id="' + formId + '"]');
-
-        if (!$btn.length) {
-            log('No button found for form:', formId);
+        var $form = findForm(mapping.form_id);
+        if (!$form || !$form.length) {
+            if (ndvwcFrontend.debug) {
+                console.log('[NDVWC] Form not found:', mapping.form_id);
+            }
             return;
         }
 
-        // Find the Elementor form by form ID.
-        // Elementor forms use a hidden field or data attribute for form ID.
-        var $form = findElementorForm(formId);
-
-        if (!$form.length) {
-            log('Elementor form not found for ID:', formId);
-            // Retry after Elementor frontend loads.
-            $(window).on('elementor/frontend/init', function () {
-                $form = findElementorForm(formId);
-                if ($form.length) {
-                    setupFormListeners($form, $btn, mapping);
-                }
-            });
+        var $wrapper = $('.ndvwc-add-to-cart-wrapper[data-form-id="' + mapping.form_id + '"]');
+        if (!$wrapper.length) {
+            if (ndvwcFrontend.debug) {
+                console.log('[NDVWC] Button wrapper not found for form:', mapping.form_id);
+            }
             return;
         }
 
-        setupFormListeners($form, $btn, mapping);
-    }
+        var $btn = $wrapper.find('.ndvwc-add-to-cart-btn');
+        var $priceSpan = $btn.find('.ndvwc-btn-price');
+        var $feedback = $wrapper.find('.ndvwc-btn-feedback');
+        var calcMode = mapping.calculation_mode || 'elementor';
 
-    /**
-     * Find the Elementor form element by form ID.
-     *
-     * @param  {string} formId Elementor form ID.
-     * @return {jQuery}        Form element.
-     */
-    function findElementorForm(formId) {
-        // Elementor Pro stores the form name/ID in a hidden input or as form-fields data.
-        var $form = $();
-
-        // Method 1: Look for form with matching form_id hidden field.
-        $('form.elementor-form').each(function () {
-            var $f = $(this);
-            var $hiddenId = $f.find('input[name="form_id"]');
-
-            if ($hiddenId.length && $hiddenId.val() === formId) {
-                $form = $f;
-                return false; // break.
-            }
-        });
-
-        // Method 2: Look for form widget with matching ID in data attribute.
-        if (!$form.length) {
-            $('.elementor-form').each(function () {
-                var $f = $(this);
-                var widgetSettings = $f.closest('.elementor-widget').data('settings');
-
-                if (widgetSettings && widgetSettings.form_id === formId) {
-                    $form = $f;
-                    return false;
-                }
-            });
+        if (ndvwcFrontend.debug) {
+            console.log('[NDVWC] Initialized mapping:', mapping.form_id, 'mode:', calcMode);
         }
 
-        // Method 3: Look in form fields wrapper.
-        if (!$form.length) {
-            $('.elementor-form-fields-wrapper').closest('form').each(function () {
-                var $f = $(this);
-                var $idInput = $f.find('[name="form_id"]');
-                if ($idInput.length && $idInput.val() === formId) {
-                    $form = $f;
-                    return false;
-                }
-            });
+        // Enable the button immediately for rules mode (price is server-side).
+        if ('rules' === calcMode) {
+            $btn.prop('disabled', false);
         }
 
-        return $form;
-    }
-
-    /**
-     * Set up field change listeners and button click handler.
-     *
-     * @param {jQuery} $form   The Elementor form element.
-     * @param {jQuery} $btn    The add-to-cart button.
-     * @param {Object} mapping Mapping configuration.
-     */
-    function setupFormListeners($form, $btn, mapping) {
-        var priceFieldId = mapping.price_field_id;
-
-        log('Setting up listeners for form:', mapping.form_id);
-
-        // Monitor all form fields for changes.
-        $form.on('input change', 'input, select, textarea', function () {
-            updateButtonPrice($form, $btn, priceFieldId);
-        });
-
-        // Also listen for Elementor's calculated field updates.
-        // Elementor calculated fields emit custom events.
-        $(document).on(
-            'elementor-pro/forms/calculation',
-            function () {
-                updateButtonPrice($form, $btn, priceFieldId);
-            }
-        );
-
-        // Run initial price check.
-        setTimeout(function () {
-            updateButtonPrice($form, $btn, priceFieldId);
-        }, 500);
-
-        // Button click handler.
-        $btn.on('click', function (e) {
-            e.preventDefault();
-            handleAddToCart($form, $btn, mapping);
-        });
-    }
-
-    /**
-     * Update the button price label from the calculated price field.
-     *
-     * @param {jQuery} $form        The form element.
-     * @param {jQuery} $btn         The button element.
-     * @param {string} priceFieldId The price field ID.
-     */
-    function updateButtonPrice($form, $btn, priceFieldId) {
-        var $priceField = $form.find('[name="form_fields[' + priceFieldId + ']"]');
-
-        // Also try alternative selectors.
-        if (!$priceField.length) {
-            $priceField = $form.find('#form-field-' + priceFieldId);
-        }
-        if (!$priceField.length) {
-            $priceField = $form.find('[id*="' + priceFieldId + '"]');
-        }
-
-        if ($priceField.length) {
-            var price = parseFloat($priceField.val());
-
-            if (!isNaN(price) && price > 0) {
-                $btn.find('.ndvwc-btn-price').text(
-                    ' – ' + ndvwcFrontend.currency_symbol + price.toFixed(2)
-                );
-                $btn.prop('disabled', false);
-                log('Price updated:', price);
-            } else {
-                $btn.find('.ndvwc-btn-price').text('');
-                $btn.prop('disabled', true);
-            }
-        }
-    }
-
-    /**
-     * Handle add-to-cart button click.
-     *
-     * @param {jQuery} $form   The form element.
-     * @param {jQuery} $btn    The button element.
-     * @param {Object} mapping Mapping configuration.
-     */
-    function handleAddToCart($form, $btn, mapping) {
-        var priceFieldId = mapping.price_field_id;
-        var productId = mapping.product_id;
-        var formId = mapping.form_id;
-
-        // Get calculated price.
-        var $priceField = $form.find('[name="form_fields[' + priceFieldId + ']"]');
-        if (!$priceField.length) {
-            $priceField = $form.find('#form-field-' + priceFieldId);
-        }
-        if (!$priceField.length) {
-            $priceField = $form.find('[id*="' + priceFieldId + '"]');
-        }
-
-        var price = parseFloat($priceField.val());
-
-        if (isNaN(price) || price <= 0) {
-            showFeedback($btn, ndvwcFrontend.i18n.error, 'error');
-            return;
-        }
-
-        // Collect all mapped form data.
-        var formData = collectFormData($form, mapping);
-
-        // Optionally clear hidden conditional fields.
-        if (ndvwcFrontend.clear_hidden_fields) {
-            formData = clearHiddenFields($form, formData, mapping);
-        }
-
-        log('Submitting:', { productId: productId, price: price, formData: formData });
-
-        // Disable button and show loading state.
-        $btn.prop('disabled', true);
-        var originalText = $btn.find('.ndvwc-btn-text').text();
-        $btn.find('.ndvwc-btn-text').text(ndvwcFrontend.i18n.adding);
-        $btn.addClass('ndvwc-loading');
-
-        // Send AJAX request.
-        $.ajax({
-            url: ndvwcFrontend.ajax_url,
-            method: 'POST',
-            data: {
-                action: 'ndvwc_add_to_cart',
-                nonce: ndvwcFrontend.nonce,
-                product_id: productId,
-                calculated_price: price,
-                form_id: formId,
-                form_data: formData
-            },
-            success: function (response) {
-                if (response.success) {
-                    showFeedback($btn, ndvwcFrontend.i18n.added, 'success');
-
-                    // Update cart fragments if available.
-                    $(document.body).trigger('wc_fragment_refresh');
-
-                    // Show view cart link.
-                    var $feedback = $btn.closest('.ndvwc-add-to-cart-wrapper').find('.ndvwc-btn-feedback');
-                    $feedback.html(
-                        '<a href="' + ndvwcFrontend.cart_url + '" class="ndvwc-view-cart-link">' +
-                        ndvwcFrontend.i18n.view_cart +
-                        '</a>'
-                    ).fadeIn();
-
-                    log('Product added to cart successfully.');
+        // Monitor form field changes for price updates (Elementor mode)
+        // or just to keep the button enabled (rules mode).
+        $form.on('change input', 'input, select, textarea', function () {
+            if ('elementor' === calcMode && mapping.price_field_id) {
+                var price = getPriceFromField($form, mapping.price_field_id);
+                if (price > 0) {
+                    $priceSpan.text(' – ' + ndvwcFrontend.currency_symbol + price.toFixed(2));
+                    $btn.prop('disabled', false);
                 } else {
-                    var errorMsg = response.data && response.data.message
-                        ? response.data.message
-                        : ndvwcFrontend.i18n.error;
-                    showFeedback($btn, errorMsg, 'error');
-                    log('Error:', errorMsg);
+                    $priceSpan.text('');
+                    $btn.prop('disabled', true);
                 }
-            },
-            error: function () {
-                showFeedback($btn, ndvwcFrontend.i18n.error, 'error');
-                log('AJAX error.');
-            },
-            complete: function () {
-                $btn.removeClass('ndvwc-loading');
-                $btn.find('.ndvwc-btn-text').text(originalText);
-                $btn.prop('disabled', false);
-
-                // Re-update price label.
-                updateButtonPrice($form, $btn, priceFieldId);
             }
+        });
+
+        // Handle add-to-cart click.
+        $btn.on('click', function () {
+            if ($btn.prop('disabled') || $btn.hasClass('ndvwc-loading')) {
+                return;
+            }
+
+            var formData = collectFormData($form, mapping.field_ids || []);
+            var price = 0;
+
+            if ('elementor' === calcMode) {
+                price = getPriceFromField($form, mapping.price_field_id);
+                if (price <= 0) {
+                    showFeedback($feedback, ndvwcFrontend.i18n.error, 'error');
+                    return;
+                }
+            }
+            // For rules mode, price = 0 is fine — the server will calculate it.
+
+            $btn.addClass('ndvwc-loading').prop('disabled', true);
+            $btn.find('.ndvwc-btn-text').text(ndvwcFrontend.i18n.adding);
+            $feedback.hide();
+
+            $.ajax({
+                url: ndvwcFrontend.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'ndvwc_add_to_cart',
+                    nonce: ndvwcFrontend.nonce,
+                    product_id: mapping.product_id,
+                    form_id: mapping.form_id,
+                    calculated_price: price,
+                    form_data: formData
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $btn.addClass('ndvwc-success');
+                        $btn.find('.ndvwc-btn-text').text(ndvwcFrontend.i18n.added);
+
+                        // If the server returned the calculated price, show it.
+                        if (response.data && response.data.price) {
+                            $priceSpan.text(' – ' + ndvwcFrontend.currency_symbol + parseFloat(response.data.price).toFixed(2));
+                        }
+
+                        var cartUrl = response.data && response.data.cart_url
+                            ? response.data.cart_url
+                            : ndvwcFrontend.cart_url;
+
+                        showFeedback(
+                            $feedback,
+                            '<a href="' + cartUrl + '" class="ndvwc-view-cart">' + ndvwcFrontend.i18n.view_cart + '</a>',
+                            'success'
+                        );
+
+                        // Reset after 3 seconds.
+                        setTimeout(function () {
+                            $btn.removeClass('ndvwc-success');
+                            $btn.find('.ndvwc-btn-text').text(ndvwcFrontend.i18n.add_to_cart);
+                        }, 3000);
+
+                        // Log debug info on success if available.
+                        if (ndvwcFrontend.debug && response.data) {
+                            if (response.data.debug) {
+                                console.log('[NDVWC] Price engine debug:', response.data.debug);
+                            }
+                            if (response.data.form_data_received) {
+                                console.log('[NDVWC] Form data received by server:', response.data.form_data_received);
+                            }
+                        }
+                    } else {
+                        var errorMsg = response.data && response.data.message
+                            ? response.data.message
+                            : ndvwcFrontend.i18n.error;
+                        showFeedback($feedback, errorMsg, 'error');
+
+                        // Log debug info if available.
+                        if (ndvwcFrontend.debug && response.data) {
+                            if (response.data.debug) {
+                                console.log('[NDVWC] Price engine debug:', response.data.debug);
+                            }
+                            if (response.data.form_data_received) {
+                                console.log('[NDVWC] Form data received by server:', response.data.form_data_received);
+                            }
+                        }
+                    }
+                },
+                error: function () {
+                    showFeedback($feedback, ndvwcFrontend.i18n.error, 'error');
+                },
+                complete: function () {
+                    $btn.removeClass('ndvwc-loading').prop('disabled', false);
+                }
+            });
         });
     }
 
     /**
-     * Collect mapped form field data.
-     *
-     * @param  {jQuery} $form   The form element.
-     * @param  {Object} mapping Mapping configuration.
-     * @return {Object}         Key-value pairs of field_id => value.
+     * Find the Elementor form by its form ID.
+     * Supports multiple detection methods.
      */
-    function collectFormData($form, mapping) {
+    function findForm(formId) {
+        var $form;
+
+        // Method 1: Form with matching id attribute (Elementor's "Form ID" setting).
+        $form = $('form#' + formId);
+        if ($form.length) return $form;
+
+        // Method 2: Form inside a wrapper with the ID.
+        $form = $('#' + formId).find('form');
+        if ($form.length) return $form;
+        // Or the element itself is the form.
+        if ($('#' + formId).is('form')) return $('#' + formId);
+
+        // Method 3: Elementor hidden input named "form_id" with matching value.
+        var $input = $('input[name="form_id"][value="' + formId + '"]');
+        if ($input.length) return $input.closest('form');
+
+        // Method 4: data-form-name attribute.
+        $form = $('form[data-form-name="' + formId + '"]');
+        if ($form.length) return $form;
+
+        // Method 5: Elementor form widget wrapper with data-settings.
+        var found = null;
+        $('.elementor-form, .elementor-widget-form').each(function () {
+            var settings = $(this).data('settings');
+            if (settings && (settings.form_name === formId || settings.form_id === formId)) {
+                found = $(this).is('form') ? $(this) : $(this).find('form');
+                return false; // break
+            }
+        });
+        if (found && found.length) return found;
+
+        // Method 6: Form with class containing the form ID.
+        $form = $('form[class*="' + formId + '"]');
+        if ($form.length) return $form;
+
+        // Method 7: Any form inside an Elementor widget section — broadest fallback.
+        $form = $('.elementor-widget-form form');
+        if ($form.length === 1) return $form; // Only if there's exactly one form.
+
+        if (ndvwcFrontend.debug) {
+            console.log('[NDVWC] All detection methods failed for form ID:', formId);
+        }
+
+        return null;
+    }
+
+    /**
+     * Get the calculated price from a form field.
+     */
+    function getPriceFromField($form, fieldId) {
+        if (!fieldId) return 0;
+
+        var $field = $form.find(
+            '[name="form_fields[' + fieldId + ']"],' +
+            '[name="' + fieldId + '"],' +
+            '#form-field-' + fieldId + ',' +
+            '[data-field-id="' + fieldId + '"]'
+        ).first();
+
+        if (!$field.length) return 0;
+
+        var val = $field.val();
+        if (!val) return 0;
+
+        // Strip currency symbols, commas, etc.
+        val = val.replace(/[^0-9.\-]/g, '');
+        var price = parseFloat(val);
+
+        return isNaN(price) ? 0 : price;
+    }
+
+    /**
+     * Collect form data for the mapped field IDs.
+     */
+    function collectFormData($form, fieldIds) {
         var data = {};
 
-        if (!mapping.field_ids || !mapping.field_ids.length) {
-            return data;
-        }
+        fieldIds.forEach(function (fieldId) {
+            var $field = $form.find(
+                '[name="form_fields[' + fieldId + ']"],' +
+                '[name="' + fieldId + '"],' +
+                '#form-field-' + fieldId
+            ).first();
 
-        mapping.field_ids.forEach(function (fieldId) {
-            var $field = $form.find('[name="form_fields[' + fieldId + ']"]');
-
-            // Alternative selectors.
             if (!$field.length) {
-                $field = $form.find('#form-field-' + fieldId);
+                // Try radio buttons.
+                $field = $form.find('[name="form_fields[' + fieldId + ']"]:checked');
             }
 
             if ($field.length) {
                 var type = $field.attr('type');
 
                 if ('checkbox' === type) {
-                    // Handle checkbox groups.
-                    var checked = [];
-                    $form.find('[name="form_fields[' + fieldId + '][]"]:checked, [name="form_fields[' + fieldId + ']"]:checked').each(function () {
-                        checked.push($(this).val());
-                    });
-                    data[fieldId] = checked.length ? checked.join(', ') : '';
+                    data[fieldId] = $field.is(':checked') ? $field.val() || 'Yes' : '';
                 } else if ('radio' === type) {
-                    data[fieldId] = $form.find('[name="form_fields[' + fieldId + ']"]:checked').val() || '';
+                    var $checked = $form.find('[name="' + $field.attr('name') + '"]:checked');
+                    data[fieldId] = $checked.length ? $checked.val() : '';
+                } else if ($field.is('select')) {
+                    data[fieldId] = $field.find('option:selected').text().trim() || $field.val();
                 } else {
                     data[fieldId] = $field.val() || '';
                 }
             }
         });
 
+        // For rules mode, also collect ALL form fields so the server can evaluate rules.
+        $form.find('input, select, textarea').each(function () {
+            var name = $(this).attr('name') || '';
+            // Extract field ID from Elementor naming convention.
+            var match = name.match(/form_fields\[(.+?)\]/);
+            if (match && match[1] && !(match[1] in data)) {
+                var type = $(this).attr('type');
+                if ('checkbox' === type) {
+                    data[match[1]] = $(this).is(':checked') ? $(this).val() || 'Yes' : '';
+                } else if ('radio' === type) {
+                    if ($(this).is(':checked')) {
+                        data[match[1]] = $(this).val();
+                    }
+                } else {
+                    data[match[1]] = $(this).val() || '';
+                }
+            }
+        });
+
+        // Clear hidden conditional fields if enabled.
+        if (ndvwcFrontend.clear_hidden_fields) {
+            $form.find('.elementor-field-group').each(function () {
+                if ($(this).is(':hidden') || $(this).css('display') === 'none') {
+                    $(this).find('input, select, textarea').each(function () {
+                        var fieldName = $(this).attr('name') || '';
+                        var fieldMatch = fieldName.match(/form_fields\[(.+?)\]/);
+                        if (fieldMatch && fieldMatch[1]) {
+                            data[fieldMatch[1]] = '';
+                        }
+                    });
+                }
+            });
+        }
+
         return data;
     }
 
     /**
-     * Clear values of hidden conditional fields.
-     *
-     * @param  {jQuery} $form       The form element.
-     * @param  {Object} formData    Collected form data.
-     * @param  {Object} mapping     Mapping configuration.
-     * @return {Object}             Cleaned form data.
+     * Show feedback message below the button.
      */
-    function clearHiddenFields($form, formData, mapping) {
-        var cleaned = {};
+    function showFeedback($el, message, type) {
+        $el.html(message)
+            .removeClass('ndvwc-feedback-success ndvwc-feedback-error')
+            .addClass('ndvwc-feedback-' + type)
+            .slideDown(200);
 
-        for (var fieldId in formData) {
-            if (formData.hasOwnProperty(fieldId)) {
-                var $wrapper = $form.find('.elementor-field-group').filter(function () {
-                    return $(this).find('[name*="' + fieldId + '"]').length > 0;
-                });
+        if ('error' === type) {
+            setTimeout(function () {
+                $el.slideUp(200);
+            }, 5000);
+        }
+    }
 
-                // If the field's wrapper is visible, keep the data.
-                if ($wrapper.length && $wrapper.is(':visible')) {
-                    cleaned[fieldId] = formData[fieldId];
-                } else if (!$wrapper.length) {
-                    // If we can't find the wrapper, keep the data to be safe.
-                    cleaned[fieldId] = formData[fieldId];
-                }
-                // Otherwise, skip hidden field value.
-            }
+    // ========================================================================
+    // PENDANT CONFIGURATOR LOGIC
+    // ========================================================================
+
+    function initPendantConfigurator($el) {
+        var productId = $el.data('product-id');
+        var configVar = 'ndvwcPendant_' + productId;
+        var config = window[configVar];
+
+        if (!config) {
+            if (ndvwcFrontend.debug) console.log('[NDVWC] No config data found for pendant product:', productId);
+            return;
         }
 
-        return cleaned;
+        var $metalSelect = $el.find('.ndvwc-pendant-metal-select');
+        var $chainSelect = $el.find('.ndvwc-pendant-chain-select');
+        var $chainLengthSelect = $el.find('.ndvwc-pendant-chain-length-select');
+        var $chainLengthLabel = $el.find('.ndvwc-pendant-chain-length-label');
+        var $stoneContainer = $el.find('.ndvwc-pendant-stone-rows');
+        var $addStoneBtn = $el.find('.ndvwc-pendant-add-stone-btn');
+        var $priceValue = $el.find('.ndvwc-pendant-price-value');
+        var $breakdown = $el.find('.ndvwc-pendant-breakdown');
+        var $cartBtn = $el.find('.ndvwc-pendant-add-to-cart-btn');
+        var $cartBtn = $el.find('.ndvwc-pendant-add-to-cart-btn');
+        var $feedback = $el.find('.ndvwc-pendant-feedback');
+        var $weightInput = $el.find('.ndvwc-pendant-weight-input');
+
+        // Toggle chain length visibility.
+        $chainSelect.on('change', function () {
+            if ($(this).val() !== 'none' && $(this).val()) {
+                $chainLengthLabel.show();
+                $chainLengthSelect.show();
+            } else {
+                $chainLengthLabel.hide();
+                $chainLengthSelect.hide();
+            }
+            updatePrice();
+        });
+
+        // Add correct number of stone rows based on current stones.
+        $addStoneBtn.on('click', function () {
+            var currentRows = $stoneContainer.find('.ndvwc-pendant-stone-row').length;
+            if (currentRows >= config.max_stones) {
+                alert('Maximum ' + config.max_stones + ' stones allowed.');
+                return;
+            }
+            addStoneRow($stoneContainer, config.stones, config.max_stones);
+        });
+
+        // Remove row delegation.
+        $stoneContainer.on('click', '.ndvwc-pendant-remove-stone', function () {
+            $(this).closest('.ndvwc-pendant-stone-row').remove();
+            updatePrice();
+        });
+
+        // Listen for changes to update price.
+        $el.on('change input', 'select, input', function () {
+            updatePrice();
+        });
+
+        // Update price function.
+        function updatePrice() {
+            var metalKey = $metalSelect.val();
+            var chainKey = $chainSelect.val();
+            var metalKey = $metalSelect.val();
+            var chainKey = $chainSelect.val();
+            var chainLen = $chainLengthSelect.val();
+            var metalWeight = $weightInput.length ? parseFloat($weightInput.val()) : null;
+
+            // Collect stones.
+            var stones = [];
+            $stoneContainer.find('.ndvwc-pendant-stone-row').each(function () {
+                var sKey = $(this).find('.ndvwc-pendant-stone-select').val();
+                var sQty = $(this).find('.ndvwc-pendant-stone-qty').val();
+                if (sKey && sQty > 0) {
+                    stones.push({ stone_key: sKey, quantity: sQty });
+                }
+            });
+
+            // Basic validation for button state.
+            if (!metalKey) {
+                $cartBtn.prop('disabled', true);
+                $priceValue.text('—');
+                return;
+            }
+
+            $cartBtn.prop('disabled', false);
+            $priceValue.addClass('ndvwc-updating').css('opacity', '0.5');
+
+            $.ajax({
+                url: ndvwcFrontend.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'ndvwc_pendant_preview_price',
+                    nonce: ndvwcFrontend.nonce,
+                    product_id: productId,
+                    metal_key: metalKey,
+                    chain_key: chainKey,
+                    chain_length: chainLen,
+                    chain_key: chainKey,
+                    chain_length: chainLen,
+                    metal_weight: metalWeight,
+                    stones: stones
+                },
+                success: function (res) {
+                    if (res.success) {
+                        $priceValue.html(res.data.formatted);
+                        // Optional: render breakdown if in debug mode or desired.
+                    }
+                },
+                complete: function () {
+                    $priceValue.removeClass('ndvwc-updating').css('opacity', '1');
+                }
+            });
+        }
+
+        // Add to Cart.
+        $cartBtn.on('click', function () {
+            if ($cartBtn.prop('disabled')) return;
+
+            var metalKey = $metalSelect.val();
+            var chainKey = $chainSelect.val();
+            var chainLen = $chainLengthSelect.val();
+            var chainLen = $chainLengthSelect.val();
+            var metalWeight = $weightInput.length ? parseFloat($weightInput.val()) : null;
+            var stones = [];
+
+            $stoneContainer.find('.ndvwc-pendant-stone-row').each(function () {
+                var sKey = $(this).find('.ndvwc-pendant-stone-select').val();
+                var sQty = $(this).find('.ndvwc-pendant-stone-qty').val();
+                if (sKey && sQty > 0) {
+                    stones.push({ stone_key: sKey, quantity: sQty });
+                }
+            });
+
+            $cartBtn.prop('disabled', true).text(ndvwcFrontend.i18n.adding);
+            $feedback.hide();
+
+            var data = {
+                pendant_metal: metalKey,
+                pendant_chain: chainKey,
+                pendant_chain_length: chainLen,
+                pendant_chain_length: chainLen,
+                pendant_metal_weight: metalWeight,
+                pendant_stones: stones
+            };
+
+            $.ajax({
+                url: ndvwcFrontend.ajax_url,
+                method: 'POST',
+                data: {
+                    action: 'ndvwc_add_to_cart',
+                    nonce: ndvwcFrontend.nonce,
+                    product_id: productId,
+                    form_id: config.form_id, // Use actual mapped form ID
+                    form_data: data
+                },
+                success: function (response) {
+                    if (response.success) {
+                        $cartBtn.text(ndvwcFrontend.i18n.added).addClass('success');
+                        showFeedback($feedback,
+                            '<a href="' + response.data.cart_url + '" class="ndvwc-view-cart">' + ndvwcFrontend.i18n.view_cart + '</a>',
+                            'success'
+                        );
+                        setTimeout(function () {
+                            $cartBtn.text(ndvwcFrontend.i18n.add_to_cart).removeClass('success').prop('disabled', false);
+                        }, 3000);
+                    } else {
+                        showFeedback($feedback, response.data.message || ndvwcFrontend.i18n.error, 'error');
+                        $cartBtn.text(ndvwcFrontend.i18n.add_to_cart).prop('disabled', false);
+                    }
+                },
+                error: function () {
+                    showFeedback($feedback, ndvwcFrontend.i18n.error, 'error');
+                    $cartBtn.text(ndvwcFrontend.i18n.add_to_cart).prop('disabled', false);
+                }
+            });
+        });
     }
 
     /**
-     * Show feedback message on the button.
-     *
-     * @param {jQuery} $btn    The button element.
-     * @param {string} message Message text.
-     * @param {string} type    'success' or 'error'.
+     * Add a stone row dynamically.
      */
-    function showFeedback($btn, message, type) {
-        $btn.addClass('ndvwc-feedback-' + type);
+    function addStoneRow($container, stones, maxStones) {
+        var html = '<div class="ndvwc-pendant-stone-row">';
 
-        setTimeout(function () {
-            $btn.removeClass('ndvwc-feedback-success ndvwc-feedback-error');
-        }, 3000);
+        // Stone select.
+        html += '<select class="ndvwc-pendant-select ndvwc-pendant-stone-select">';
+        html += '<option value="">— Select Stone —</option>';
+        stones.forEach(function (s) {
+            html += '<option value="' + s.key + '">' + s.name + '</option>';
+        });
+        html += '</select>';
+
+        // Qty input.
+        html += '<input type="number" class="ndvwc-pendant-stone-qty" min="0" max="' + maxStones + '" value="1" />';
+
+        // Remove button.
+        html += '<button type="button" class="ndvwc-pendant-remove-stone" title="Remove">×</button>';
+        html += '</div>';
+
+        $container.append(html);
     }
 
 })(jQuery);

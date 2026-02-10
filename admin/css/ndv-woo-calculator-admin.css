@@ -1,28 +1,27 @@
 /**
- * NDV Woo Calculator — Admin Styles
+ * NDV Woo Calculator — Admin CSS
  *
  * @package NDV_Woo_Calculator
  * @since   1.0.0
  */
 
-/* Admin page wrapper */
+/* ─── Admin Wrap ──────────────────────────── */
 .ndvwc-admin-wrap {
-	max-width: 960px;
+	max-width: 900px;
 }
 
-/* Tabs */
+/* ─── Tabs ────────────────────────────────── */
 .ndvwc-tabs {
 	margin-bottom: 20px;
 }
 
-/* Mapping rows */
+/* ─── Mapping Card ────────────────────────── */
 .ndvwc-mapping-row {
 	background: #fff;
-	border: 1px solid #ccd0d4;
+	border: 1px solid #c3c4c7;
 	border-radius: 4px;
 	margin-bottom: 16px;
-	padding: 0;
-	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .ndvwc-mapping-header {
@@ -30,8 +29,8 @@
 	justify-content: space-between;
 	align-items: center;
 	padding: 12px 16px;
-	background: #f0f0f1;
-	border-bottom: 1px solid #ccd0d4;
+	background: #f6f7f7;
+	border-bottom: 1px solid #c3c4c7;
 	border-radius: 4px 4px 0 0;
 }
 
@@ -46,75 +45,104 @@
 }
 
 .ndvwc-mapping-fields th {
-	padding-left: 16px;
-	width: 200px;
+	width: 180px;
+	vertical-align: top;
+	padding-top: 20px;
 }
 
-.ndvwc-mapping-fields td {
-	padding-right: 16px;
-}
-
-/* Remove mapping button */
-.ndvwc-remove-mapping {
-	color: #b32d2e;
-	border-color: #b32d2e;
-}
-
-.ndvwc-remove-mapping:hover {
-	background: #b32d2e;
-	color: #fff;
-	border-color: #b32d2e;
-}
-
-.ndvwc-remove-mapping .dashicons {
-	font-size: 16px;
-	width: 16px;
-	height: 16px;
-	line-height: 1;
-}
-
-/* Field mappings sub-table */
-.ndvwc-field-mappings-container {
+.ndvwc-mapping-fields td .description {
+	color: #646970;
+	font-style: italic;
 	margin-top: 4px;
 }
 
-.ndvwc-field-mappings-table {
+/* ─── Sub-tables (field mappings + pricing rules) ─ */
+.ndvwc-field-mappings-table,
+.ndvwc-pricing-rules-table {
+	border: 1px solid #dcdcde;
 	margin-bottom: 8px;
 }
 
-.ndvwc-field-mappings-table thead th {
-	padding: 8px 10px;
-	font-weight: 600;
+.ndvwc-field-mappings-table thead th,
+.ndvwc-pricing-rules-table thead th {
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #50575e;
+	padding: 8px;
 }
 
-.ndvwc-field-mappings-table tbody td {
-	padding: 6px 10px;
+.ndvwc-field-mapping-row td,
+.ndvwc-pricing-rule-row td {
+	padding: 6px 8px;
 	vertical-align: middle;
 }
 
-.ndvwc-field-mappings-table input[type="text"] {
+.ndvwc-field-mapping-row input,
+.ndvwc-pricing-rule-row input,
+.ndvwc-pricing-rule-row select {
 	width: 100%;
+	box-sizing: border-box;
 }
 
-/* Remove field mapping button */
-.ndvwc-remove-field-mapping {
-	padding: 2px 6px;
-	min-height: 28px;
-}
-
-.ndvwc-remove-field-mapping .dashicons {
-	font-size: 16px;
-	width: 16px;
-	height: 16px;
-	color: #b32d2e;
+.ndvwc-pricing-rule-row select {
+	min-width: 110px;
 }
 
 /* Add buttons */
-.ndvwc-add-field-mapping {
-	margin-top: 4px;
+.ndvwc-add-field-mapping,
+.ndvwc-add-pricing-rule {
+	margin-top: 4px !important;
 }
 
 .ndvwc-add-field-mapping .dashicons,
+.ndvwc-add-pricing-rule .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	vertical-align: text-bottom;
+	margin-right: 2px;
+}
+
+/* Remove buttons */
+.ndvwc-remove-mapping,
+.ndvwc-remove-field-mapping,
+.ndvwc-remove-pricing-rule {
+	color: #b32d2e !important;
+	border-color: transparent !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.ndvwc-remove-mapping:hover,
+.ndvwc-remove-field-mapping:hover,
+.ndvwc-remove-pricing-rule:hover {
+	color: #a00 !important;
+	background: #fee !important;
+}
+
+/* ─── Mode toggle: show/hide rows ─────────── */
+/* By default, rules-mode rows are hidden; JS toggles visibility. */
+.ndvwc-rules-mode-row {
+	display: none;
+}
+
+.ndvwc-mapping-row[data-calc-mode="rules"] .ndvwc-rules-mode-row {
+	display: table-row;
+}
+
+.ndvwc-mapping-row[data-calc-mode="rules"] .ndvwc-elementor-mode-row {
+	display: none;
+}
+
+/* ─── Action bar ──────────────────────────── */
+.ndvwc-mapping-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 16px 0;
+}
+
 #ndvwc-add-mapping .dashicons {
 	font-size: 16px;
 	width: 16px;
@@ -123,19 +151,14 @@
 	margin-right: 4px;
 }
 
-/* Mapping actions bar */
-.ndvwc-mapping-actions {
-	display: flex;
-	align-items: center;
-	gap: 10px;
-	margin-top: 16px;
-	padding-top: 16px;
-	border-top: 1px solid #ccd0d4;
+/* ─── Save status ─────────────────────────── */
+.ndvwc-save-status {
+	font-weight: 500;
+	margin-left: 8px;
+	transition: opacity 0.3s ease;
 }
 
-/* Save status message */
-.ndvwc-save-status {
-	font-style: italic;
+.ndvwc-save-status.success {
 	color: #00a32a;
 }
 
@@ -143,7 +166,108 @@
 	color: #d63638;
 }
 
-/* Settings form tweaks */
-.ndvwc-settings-form .form-table th {
-	width: 200px;
+/* ─── Pendant mode toggle ─────────────────── */
+.ndvwc-pendant-mode-row {
+	display: none;
+}
+
+.ndvwc-mapping-row[data-calc-mode="pendant"] .ndvwc-pendant-mode-row {
+	display: table-row;
+}
+
+.ndvwc-mapping-row[data-calc-mode="pendant"] .ndvwc-elementor-mode-row,
+.ndvwc-mapping-row[data-calc-mode="pendant"] .ndvwc-rules-mode-row {
+	display: none;
+}
+
+/* Pendant checkbox grid */
+.ndvwc-pendant-checkboxes {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 8px 16px;
+}
+
+.ndvwc-pendant-checkbox-label {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-size: 13px;
+	cursor: pointer;
+	padding: 4px 8px;
+	background: #f6f7f7;
+	border: 1px solid #dcdcde;
+	border-radius: 3px;
+	transition: background 0.15s;
+}
+
+.ndvwc-pendant-checkbox-label:hover {
+	background: #e8f0fe;
+}
+
+.ndvwc-pendant-checkbox-label input[type="checkbox"]:checked+span,
+.ndvwc-pendant-checkbox-label:has(input:checked) {
+	background: #e1f5e0;
+	border-color: #00a32a;
+}
+
+/* ─── Global Rates Tab ────────────────────── */
+.ndvwc-rates-section {
+	max-width: 900px;
+}
+
+.ndvwc-rates-section h2 {
+	margin-top: 24px;
+}
+
+.ndvwc-rates-table {
+	margin-bottom: 8px;
+}
+
+.ndvwc-rates-table thead th {
+	font-size: 12px;
+	text-transform: uppercase;
+	letter-spacing: 0.5px;
+	color: #50575e;
+	padding: 8px;
+}
+
+.ndvwc-rate-row td {
+	padding: 6px 8px;
+	vertical-align: middle;
+}
+
+.ndvwc-rate-row input {
+	width: 100%;
+	box-sizing: border-box;
+}
+
+.ndvwc-add-rate-row {
+	margin-top: 4px !important;
+}
+
+.ndvwc-add-rate-row .dashicons {
+	font-size: 16px;
+	width: 16px;
+	height: 16px;
+	vertical-align: text-bottom;
+	margin-right: 2px;
+}
+
+.ndvwc-remove-rate-row {
+	color: #b32d2e !important;
+	border-color: transparent !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+.ndvwc-remove-rate-row:hover {
+	color: #a00 !important;
+	background: #fee !important;
+}
+
+.ndvwc-rates-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 16px 0;
 }
